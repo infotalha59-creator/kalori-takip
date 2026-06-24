@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#16a34a" />
+  <title>Kalori Takip</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(160deg, #f0fdf4, #dcfce7);
+      color: #14532d; min-height: 100vh; padding: 20px;
+    }
+    .kapsayici { max-width: 480px; margin: 0 auto; }
+    header { text-align: center; margin: 12px 0 20px; }
+    header h1 { font-size: 26px; }
+    header p { color: #4b5563; font-size: 14px; margin-top: 4px; }
+    .demo-rozet {
+      display: inline-block; margin-top: 8px; background: #fef3c7; color: #92400e;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      padding: 4px 10px; border-radius: 999px;
+    }
+
+    .kart {
+      background: #fff; border-radius: 20px; padding: 20px;
+      box-shadow: 0 8px 24px rgba(22,101,52,.08); margin-bottom: 18px;
+    }
+    .kart h2 { font-size: 15px; color: #166534; margin-bottom: 14px; }
+
+    /* ---- Günlük özet ---- */
+    .ozet-ust { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
+    .ozet-buyuk { font-size: 34px; font-weight: 800; line-height: 1; }
+    .ozet-buyuk small { font-size: 16px; color: #9ca3af; font-weight: 600; }
+    .kalan { text-align: right; font-size: 13px; }
+    .kalan b { display: block; font-size: 20px; }
+    .kalan.asildi b { color: #dc2626; }
+
+    .bar-dis { background: #e5e7eb; border-radius: 999px; height: 14px; overflow: hidden; }
+    .bar-ic { background: #16a34a; height: 100%; width: 0; transition: width .4s ease; border-radius: 999px; }
+    .bar-ic.asildi { background: #dc2626; }
+
+    .ozet-makro { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px; }
+    .ozet-makro .m { background: #f0fdf4; border-radius: 12px; text-align: center; padding: 10px 4px; }
+    .ozet-makro .m .d { font-size: 17px; font-weight: 700; }
+    .ozet-makro .m .e { font-size: 11px; color: #6b7280; }
+
+    .hedef-satir { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+    .hedef-satir label { font-size: 13px; color: #6b7280; }
+    .hedef-satir input {
+      flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 15px;
+    }
+    .mini-btn {
+      background: #166534; color: #fff; border: none; border-radius: 10px;
+      padding: 10px 14px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+
+    /* ---- Sekmeler ---- */
+    .sekmeler { display: flex; gap: 8px; margin-bottom: 14px; }
+    .sekme {
+      flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer;
+      background: #f0fdf4; color: #166534; font-weight: 600; font-size: 14px; border: 2px solid transparent;
+    }
+    .sekme.aktif { border-color: #16a34a; background: #dcfce7; }
+
+    #foto-input { display: none; }
+    .cek-btn {
+      display: block; width: 100%; text-align: center; background: #16a34a; color: #fff;
+      font-size: 17px; font-weight: 600; padding: 16px; border: none; border-radius: 14px; cursor: pointer;
+    }
+    .cek-btn:active { background: #15803d; }
+    #onizleme { width: 100%; border-radius: 14px; margin-top: 14px; display: none; }
+    .analiz-btn {
+      display: none; width: 100%; margin-top: 12px; background: #0f766e; color: #fff;
+      font-size: 16px; font-weight: 600; padding: 14px; border: none; border-radius: 14px; cursor: pointer;
+    }
+    .analiz-btn:disabled { background: #94a3b8; }
+
+    select.yemek-sec {
+      width: 100%; padding: 14px; border: 1px solid #d1d5db; border-radius: 12px;
+      font-size: 16px; background: #fff;
+    }
+
+    .yukleniyor { text-align: center; padding: 16px; display: none; color: #4b5563; }
+    .spinner {
+      width: 34px; height: 34px; border: 4px solid #d1fae5; border-top-color: #16a34a;
+      border-radius: 50%; margin: 0 auto 8px; animation: don .8s linear infinite;
+    }
+    @keyframes don { to { transform: rotate(360deg); } }
+
+    /* ---- Sonuç ---- */
+    #sonuc { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed #d1d5db; }
+    .yemek-adi { font-size: 20px; font-weight: 700; }
+    .porsiyon { color: #6b7280; font-size: 13px; margin-bottom: 14px; }
+    .kalori-kutu { background: #16a34a; color: #fff; border-radius: 14px; text-align: center; padding: 14px; margin-bottom: 12px; }
+    .kalori-kutu .deger { font-size: 34px; font-weight: 800; }
+    .kalori-kutu .etiket { font-size: 12px; opacity: .9; }
+    .makro-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .makro { background: #f0fdf4; border-radius: 12px; text-align: center; padding: 12px 4px; }
+    .makro .deger { font-size: 18px; font-weight: 700; }
+    .makro .etiket { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .notlar { font-size: 13px; color: #6b7280; margin-top: 12px; line-height: 1.5; }
+    .guven { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+    .ekle-btn {
+      width: 100%; margin-top: 14px; background: #166534; color: #fff; font-size: 16px;
+      font-weight: 600; padding: 14px; border: none; border-radius: 14px; cursor: pointer;
+    }
+    .hata { color: #dc2626; text-align: center; padding: 12px; display: none; }
+
+    /* ---- Geçmiş ---- */
+    .gecmis-bos { color: #9ca3af; font-size: 14px; text-align: center; padding: 10px; }
+    .ogun {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid #f3f4f6;
+    }
+    .ogun:last-child { border-bottom: none; }
+    .ogun .sol .ad { font-weight: 600; font-size: 15px; }
+    .ogun .sol .alt { font-size: 12px; color: #9ca3af; }
+    .ogun .sag { display: flex; align-items: center; gap: 10px; }
+    .ogun .kcal { font-weight: 700; color: #16a34a; }
+    .sil-btn {
+      background: none; border: none; color: #dc2626; font-size: 18px; cursor: pointer; padding: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="kapsayici">
+    <header>
+      <h1>🍽️ Kalori Takip</h1>
+      <p>Öğününü ekle, günlük kalorini takip et</p>
+      {% if demo %}<span class="demo-rozet">DEMO MODU</span>{% endif %}
+    </header>
+
+    <!-- ====== GÜNLÜK ÖZET ====== -->
+    <div class="kart">
+      <h2>📊 Bugünün Özeti</h2>
+      <div class="ozet-ust">
+        <div class="ozet-buyuk"><span id="toplam-kalori">0</span> <small>/ <span id="hedef-goster">2000</span> kcal</small></div>
+        <div class="kalan" id="kalan-kutu">
+          <span>Kalan</span>
+          <b id="kalan-kalori">2000</b>
+        </div>
+      </div>
+      <div class="bar-dis"><div class="bar-ic" id="bar"></div></div>
+
+      <div class="ozet-makro">
+        <div class="m"><div class="d"><span id="t-protein">0</span>g</div><div class="e">Protein</div></div>
+        <div class="m"><div class="d"><span id="t-karb">0</span>g</div><div class="e">Karbonhidrat</div></div>
+        <div class="m"><div class="d"><span id="t-yag">0</span>g</div><div class="e">Yağ</div></div>
+      </div>
+
+      <div class="hedef-satir">
+        <label>🎯 Hedef:</label>
+        <input type="number" id="hedef-input" min="0" step="50" />
+        <button class="mini-btn" onclick="hedefKaydet()">Kaydet</button>
+      </div>
+    </div>
+
+    <!-- ====== ÖĞÜN EKLE ====== -->
+    <div class="kart">
+      <h2>➕ Öğün Ekle</h2>
+      <div class="sekmeler">
+        <div class="sekme aktif" id="sekme-foto" onclick="sekmeDegistir('foto')">📷 Fotoğraf</div>
+        <div class="sekme" id="sekme-liste" onclick="sekmeDegistir('liste')">📋 Listeden Seç</div>
+      </div>
+
+      <!-- Fotoğraf sekmesi -->
+      <div id="panel-foto">
+        <input type="file" id="foto-input" accept="image/*" capture="environment" />
+        <button class="cek-btn" onclick="document.getElementById('foto-input').click()">📷 Fotoğraf Çek / Seç</button>
+        <img id="onizleme" alt="önizleme" />
+        <button class="analiz-btn" id="analiz-btn" onclick="analizEt()">🔍 Analiz Et</button>
+      </div>
+
+      <!-- Liste sekmesi -->
+      <div id="panel-liste" style="display:none">
+        <select class="yemek-sec" id="yemek-sec" onchange="listedenSec()">
+          <option value="">— Yemek seç —</option>
+        </select>
+      </div>
+
+      <div class="yukleniyor" id="yukleniyor"><div class="spinner"></div>Öğün analiz ediliyor...</div>
+      <div class="hata" id="hata"></div>
+
+      <!-- Ortak sonuç kartı -->
+      <div id="sonuc">
+        <div class="yemek-adi" id="r-ad"></div>
+        <div class="porsiyon" id="r-porsiyon"></div>
+        <div class="kalori-kutu">
+          <div class="deger"><span id="r-kalori">0</span> kcal</div>
+          <div class="etiket">Tahmini Toplam Kalori</div>
+        </div>
+        <div class="makro-grid">
+          <div class="makro"><div class="deger"><span id="r-protein">0</span>g</div><div class="etiket">Protein</div></div>
+          <div class="makro"><div class="deger"><span id="r-karb">0</span>g</div><div class="etiket">Karbonhidrat</div></div>
+          <div class="makro"><div class="deger"><span id="r-yag">0</span>g</div><div class="etiket">Yağ</div></div>
+        </div>
+        <div class="notlar" id="r-notlar"></div>
+        <div class="guven" id="r-guven"></div>
+        <button class="ekle-btn" onclick="guneEkle()">➕ Güne Ekle</button>
+      </div>
+    </div>
+
+    <!-- ====== BUGÜNÜN ÖĞÜNLERİ ====== -->
+    <div class="kart">
+      <h2>🗓️ Bugünün Öğünleri</h2>
+      <div id="gecmis-liste"><div class="gecmis-bos">Henüz öğün eklenmedi.</div></div>
+    </div>
+  </div>
+
+  <script>
+    let secilenDosya = null;
+    let sonSonuc = null;   // güne eklenecek aktif öğün
+
+    // ---- Sayfa açılışı ----
+    window.addEventListener("DOMContentLoaded", () => {
+      ozetYukle();
+      yemekleriYukle();
+    });
+
+    // ---- Sekme değiştirme ----
+    function sekmeDegistir(hangi) {
+      const foto = hangi === "foto";
+      document.getElementById("sekme-foto").classList.toggle("aktif", foto);
+      document.getElementById("sekme-liste").classList.toggle("aktif", !foto);
+      document.getElementById("panel-foto").style.display = foto ? "block" : "none";
+      document.getElementById("panel-liste").style.display = foto ? "none" : "block";
+      document.getElementById("sonuc").style.display = "none";
+      document.getElementById("hata").style.display = "none";
+    }
+
+    // ---- Yemek listesini doldur ----
+    async function yemekleriYukle() {
+      const veri = await (await fetch("/yemekler")).json();
+      const sec = document.getElementById("yemek-sec");
+      veri.forEach((y, i) => {
+        const o = document.createElement("option");
+        o.value = i;
+        o.textContent = `${y.yemek_adi} — ${y.kalori} kcal`;
+        sec.appendChild(o);
+      });
+      window.YEMEKLER = veri;
+    }
+
+    function listedenSec() {
+      const i = document.getElementById("yemek-sec").value;
+      if (i === "") return;
+      const y = window.YEMEKLER[i];
+      sonucGoster({ ...y, guven: 1 });
+    }
+
+    // ---- Fotoğraf önizleme ----
+    document.getElementById("foto-input").addEventListener("change", (e) => {
+      secilenDosya = e.target.files[0];
+      if (!secilenDosya) return;
+      const onz = document.getElementById("onizleme");
+      onz.src = URL.createObjectURL(secilenDosya);
+      onz.style.display = "block";
+      document.getElementById("analiz-btn").style.display = "block";
+      document.getElementById("sonuc").style.display = "none";
+    });
+
+    // ---- Fotoğrafı analiz et ----
+    async function analizEt() {
+      if (!secilenDosya) return;
+      const yuk = document.getElementById("yukleniyor");
+      const hata = document.getElementById("hata");
+      document.getElementById("analiz-btn").disabled = true;
+      yuk.style.display = "block";
+      document.getElementById("sonuc").style.display = "none";
+      hata.style.display = "none";
+
+      const form = new FormData();
+      form.append("foto", secilenDosya);
+      try {
+        const veri = await (await fetch("/analiz", { method: "POST", body: form })).json();
+        if (veri.hata) { hata.textContent = "⚠️ " + veri.hata; hata.style.display = "block"; }
+        else sonucGoster(veri);
+      } catch {
+        hata.textContent = "⚠️ Sunucuya bağlanılamadı.";
+        hata.style.display = "block";
+      } finally {
+        yuk.style.display = "none";
+        document.getElementById("analiz-btn").disabled = false;
+      }
+    }
+
+    // ---- Sonuç kartını doldur ----
+    function sonucGoster(v) {
+      sonSonuc = v;
+      document.getElementById("r-ad").textContent = v.yemek_adi || "Bilinmiyor";
+      document.getElementById("r-porsiyon").textContent = v.porsiyon || "";
+      document.getElementById("r-kalori").textContent = v.kalori ?? 0;
+      document.getElementById("r-protein").textContent = v.protein ?? 0;
+      document.getElementById("r-karb").textContent = v.karbonhidrat ?? 0;
+      document.getElementById("r-yag").textContent = v.yag ?? 0;
+      document.getElementById("r-notlar").textContent = v.notlar || "";
+      const y = Math.round((v.guven ?? 0) * 100);
+      document.getElementById("r-guven").textContent = "Güven: %" + y + " (değerler tahminidir)";
+      document.getElementById("sonuc").style.display = "block";
+    }
+
+    // ---- Öğünü güne ekle ----
+    async function guneEkle() {
+      if (!sonSonuc) return;
+      const ozet = await (await fetch("/kaydet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sonSonuc),
+      })).json();
+      ozetCiz(ozet);
+      document.getElementById("sonuc").style.display = "none";
+      document.getElementById("yemek-sec").value = "";
+      // küçük geri bildirim
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ---- Özeti yükle / çiz ----
+    async function ozetYukle() {
+      ozetCiz(await (await fetch("/gecmis")).json());
+    }
+
+    function ozetCiz(o) {
+      document.getElementById("toplam-kalori").textContent = o.toplam.kalori;
+      document.getElementById("hedef-goster").textContent = o.hedef;
+      document.getElementById("hedef-input").value = o.hedef;
+      document.getElementById("t-protein").textContent = o.toplam.protein;
+      document.getElementById("t-karb").textContent = o.toplam.karbonhidrat;
+      document.getElementById("t-yag").textContent = o.toplam.yag;
+
+      const kalan = o.kalan;
+      document.getElementById("kalan-kalori").textContent = kalan;
+      const kalanKutu = document.getElementById("kalan-kutu");
+      kalanKutu.classList.toggle("asildi", kalan < 0);
+
+      const yuzde = o.hedef > 0 ? Math.min(100, (o.toplam.kalori / o.hedef) * 100) : 0;
+      const bar = document.getElementById("bar");
+      bar.style.width = yuzde + "%";
+      bar.classList.toggle("asildi", o.toplam.kalori > o.hedef);
+
+      // geçmiş listesi
+      const liste = document.getElementById("gecmis-liste");
+      if (!o.kayitlar.length) {
+        liste.innerHTML = '<div class="gecmis-bos">Henüz öğün eklenmedi.</div>';
+        return;
+      }
+      liste.innerHTML = "";
+      o.kayitlar.forEach((k) => {
+        const div = document.createElement("div");
+        div.className = "ogun";
+        div.innerHTML = `
+          <div class="sol">
+            <div class="ad">${k.yemek_adi}</div>
+            <div class="alt">${k.zaman} · P${k.protein} K${k.karbonhidrat} Y${k.yag}</div>
+          </div>
+          <div class="sag">
+            <span class="kcal">${k.kalori} kcal</span>
+            <button class="sil-btn" title="Sil">🗑️</button>
+          </div>`;
+        div.querySelector(".sil-btn").onclick = () => ogunSil(k.zaman, k.yemek_adi);
+        liste.appendChild(div);
+      });
+    }
+
+    // ---- Hedef kaydet ----
+    async function hedefKaydet() {
+      const hedef = parseInt(document.getElementById("hedef-input").value, 10) || 0;
+      ozetCiz(await (await fetch("/hedef", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hedef }),
+      })).json());
+    }
+
+    // ---- Öğün sil ----
+    async function ogunSil(zaman, yemek_adi) {
+      ozetCiz(await (await fetch("/sil", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zaman, yemek_adi }),
+      })).json());
+    }
+  </script>
+</body>
+</html>
