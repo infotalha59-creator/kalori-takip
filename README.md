@@ -1,3 +1,8 @@
+AD :Talha Yalçın
+Öğrenci No :24010502133
+Proje Amacı : Günlük Kalori İhtiyacını Takip etme ve hesaplayarak kolaylık sağlama
+
+
 # 🍽️ Kalori Takip Uygulaması (Demo Mod)
 
 Yemek fotoğrafı çek, uygulama öğünün tahmini **kalori, protein, karbonhidrat ve
