@@ -3,10 +3,6 @@
 Yemek fotoğrafı çek, uygulama öğünün tahmini **kalori, protein, karbonhidrat ve
 yağ** değerlerini göstersin. Python (Flask) ile yazıldı.
 
-> **Demo Mod:** Bu sürüm hiçbir API anahtarı, kredi veya internet gerektirmez.
-> Fotoğrafa göre, içindeki gerçek besin değerli yemek veritabanından **tutarlı**
-> bir sonuç döner (aynı fotoğraf hep aynı sonucu verir).
-
 ## Özellikler
 
 - 📷 **Fotoğraftan analiz** — yemeğin fotoğrafını çek, besin değerlerini gör
